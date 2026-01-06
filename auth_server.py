@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, render_template_string
+﻿from flask import Flask, request, jsonify, render_template_string
 from flask_cors import CORS
 import json
 import os
@@ -10,11 +10,11 @@ import time
 app = Flask(__name__)
 CORS(app)
 
-# Sử dụng biến môi trường hoặc file local
+# Sá»­ dá»¥ng biáº¿n mÃ´i trÆ°á»ng hoáº·c file local
 KEYS_FILE = os.getenv('KEYS_FILE', 'keys.json')
 
 def load_keys():
-    """Load keys từ file JSON"""
+    """Load keys tá»« file JSON"""
     if not os.path.exists(KEYS_FILE):
         return []
     try:
@@ -24,7 +24,7 @@ def load_keys():
         return []
 
 def save_keys(data):
-    """Lưu keys vào file JSON"""
+    """LÆ°u keys vÃ o file JSON"""
     try:
         with open(KEYS_FILE, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4, ensure_ascii=False)
@@ -34,11 +34,11 @@ def save_keys(data):
         return False
 
 def get_hwid_hash(hwid):
-    """Hash HWID để bảo mật"""
+    """Hash HWID Ä‘á»ƒ báº£o máº­t"""
     return hashlib.sha256(hwid.encode()).hexdigest()[:16]
 
 def check_expiry(key_data):
-    """Kiểm tra key có hết hạn không"""
+    """Kiá»ƒm tra key cÃ³ háº¿t háº¡n khÃ´ng"""
     if 'expire_at' in key_data:
         try:
             expire = datetime.strptime(key_data['expire_at'], "%Y-%m-%d %H:%M:%S")
@@ -51,7 +51,7 @@ def check_expiry(key_data):
 
 @app.route('/')
 def home():
-    """Trang chủ"""
+    """Trang chá»§"""
     return jsonify({
         "service": "ICExAI Auth Server",
         "status": "online",
@@ -124,9 +124,34 @@ def verify():
         print(f"[ERROR] {e}")
         return jsonify({"success": False, "message": "Server error"}), 500
 
+@app.route('/sync_keys', methods=['POST'])
+def sync_keys():
+    """API Ä‘á»“ng bá»™ keys tá»« Discord Bot"""
+    try:
+        data = request.json
+        new_keys = data.get('keys', [])
+        
+        if not new_keys:
+            return jsonify({"success": False, "message": "No keys provided"}), 400
+        
+        # LÆ°u keys má»›i
+        if save_keys(new_keys):
+            print(f"[SYNC] ÄÃ£ Ä‘á»“ng bá»™ {len(new_keys)} key tá»« Discord Bot")
+            return jsonify({
+                "success": True,
+                "message": f"Synced {len(new_keys)} keys",
+                "total": len(new_keys)
+            })
+        else:
+            return jsonify({"success": False, "message": "Failed to save keys"}), 500
+            
+    except Exception as e:
+        print(f"[ERROR] Sync failed: {e}")
+        return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/admin')
 def admin():
-    """Admin panel - Xem danh sách key"""
+    """Admin panel - Xem danh sÃ¡ch key"""
     keys = load_keys()
     
     html = """
@@ -148,7 +173,7 @@ def admin():
         </style>
     </head>
     <body>
-        <h1>🔐 ICExAI Admin Panel</h1>
+        <h1>ðŸ” ICExAI Admin Panel</h1>
         <p>Total Keys: <strong>{{ total }}</strong></p>
         <table>
             <tr>
@@ -187,3 +212,4 @@ if __name__ == '__main__':
     print(f"  Keys: {KEYS_FILE}")
     print("="*60)
     app.run(host='0.0.0.0', port=port, debug=False)
+
